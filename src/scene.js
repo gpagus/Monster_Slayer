@@ -400,7 +400,7 @@ export default class Scene extends Phaser.Scene {
 
     if (this.attackLeftKey.isDown) {
 
-      if (!this.attackSound.isPlaying && !this.specialSound.isPlaying) {
+      if (!this.attackSound.isPlaying && !this.specialSound.isPlaying && this.player.anims.currentAnim.key !== 'die') {
         this.attackLeft();
         this.attackSound.play();
       }
@@ -409,7 +409,7 @@ export default class Scene extends Phaser.Scene {
 
     if (this.attackRightKey.isDown) {
 
-      if (!this.attackSound.isPlaying && !this.specialSound.isPlaying) {
+      if (!this.attackSound.isPlaying && !this.specialSound.isPlaying && this.player.anims.currentAnim.key !== 'die') {
         this.attackRight();
         this.attackSound.play();
       }
@@ -427,7 +427,7 @@ export default class Scene extends Phaser.Scene {
 
     }
 
-    if (this.specialKey.isDown && this.specialReady) {
+    if (this.specialKey.isDown && this.specialReady && this.player.anims.currentAnim.key !== 'die') {
       this.activateSpecial();
     }
   }
@@ -482,7 +482,7 @@ export default class Scene extends Phaser.Scene {
 
 
   jump() {
-    if (this.player.body.onFloor()) {
+    if (this.player.body.onFloor() && this.player.anims.currentAnim.key !== 'die') {
       this.player.setVelocityY(-135);
 
       if (!this.player.anims.isPlaying || this.player.anims.currentAnim.key !== "jump") {
@@ -527,41 +527,38 @@ export default class Scene extends Phaser.Scene {
 
 
   handleHitboxCollision(hitbox, enemy) {
-
     if (!enemy.isDying) {
-      enemy.isDying = true;
-      enemy.body.enable = false;
+        enemy.isDying = true;
+        enemy.body.enable = false;
 
-      this.killSound.play();
+        this.killSound.play();
 
-      switch (enemy.constructor.name) {
-        case "Skeleton":
-          enemy.anims.play("skeleton_die", true);
-          break;
-        case "Mushroom":
-          enemy.anims.play("mushroom_die", true);
-          break;
-        case "Goblin":
-          enemy.anims.play("goblin_die", true);
-          break;
-        case "FlyingEye":
-          enemy.anims.play("flying_eye_die", true);
-          break;
-      }
-
-      // Destroy the enemy object
-      enemy.on("animationcomplete", () => {
-        enemy.destroy();
-        this.score += 10;
-        this.specialPoints += 10;
-        this.scoreText.setText("Score: " + this.score);
-
-        if (this.specialPoints >= 100) {
-          this.specialReady = true;
+        if (enemy instanceof Skeleton) {
+            enemy.anims.play("skeleton_die", true);
+        } else if (enemy instanceof Mushroom) {
+            enemy.anims.play("mushroom_die", true);
+        } else if (enemy instanceof Goblin) {
+            enemy.anims.play("goblin_die", true);
+        } else if (enemy instanceof FlyingEye) {
+            enemy.anims.play("flying_eye_die", true);
+        } else {
+            console.log("No ocurrió nada");
         }
-      });
+
+        // Destroy the enemy object after the death animation
+        enemy.on("animationcomplete", () => {
+            enemy.destroy();
+            this.score += 10;
+            this.specialPoints += 10;
+            this.scoreText.setText("Score: " + this.score);
+
+            if (this.specialPoints >= 100) {
+                this.specialReady = true;
+            }
+        });
     }
-  }
+}
+
 
 
   spawnEnemy() {
@@ -620,62 +617,48 @@ export default class Scene extends Phaser.Scene {
 
     if (!enemy.isAttacking && !enemy.isDying) {
 
-      enemy.isAttacking = true;
+        enemy.isAttacking = true;
 
-      // Plays death animation depending on the type of enemy
-      switch (enemy.constructor.name) {
-        case "Skeleton":
-          enemy.anims.play("skeleton_attack", true);
-          break;
-        case "Mushroom":
-          enemy.anims.play("mushroom_attack", true);
-          break;
-        case "Goblin":
-          enemy.anims.play("goblin_attack", true);
-          break;
-        case "FlyingEye":
-          enemy.anims.play("flying_eye_attack", true);
-          break;
-      }
-
-      // Stops enemy when he is attacking
-      enemy.body.setVelocity(0, 0);
-
-
-      const attackInterval = setInterval(() => {
-
-
-        if (enemy.anims?.currentAnim?.key?.includes("attack")) {
-          this.get_hit.play();
-          this.health -= enemy.damage;
-
-
-          this.updateHealthBar();
-
-
-          if (this.health <= 0) {
-            this.player.anims.play("die", true);
-
-            this.sound.stopAll();
-
-
-            this.player.setTint(0xff0000);
-            this.time.delayedCall(2000, () => {
-              // Changes to GameOver scene
-              this.scene.start("GameOver", { score: this.score });
-            }, [], this);
-          }
-
-
+        if (enemy instanceof Skeleton) {
+            enemy.anims.play("skeleton_attack", true);
+        } else if (enemy instanceof Mushroom) {
+            enemy.anims.play("mushroom_attack", true);
+        } else if (enemy instanceof Goblin) {
+            enemy.anims.play("goblin_attack", true);
+        } else if (enemy instanceof FlyingEye) {
+            enemy.anims.play("flying_eye_attack", true);
         }
 
-        enemy.isAttacking = false;
+        // stops the enemy when is attacking
+        enemy.body.setVelocity(0, 0);
 
-        clearInterval(attackInterval);
+        const attackInterval = setInterval(() => {
+            if (enemy.anims?.currentAnim?.key?.includes("attack")) {
+                this.get_hit.play();
+                this.health -= enemy.damage;
 
-      }, 475);
+                this.updateHealthBar();
+
+                if (this.health <= 0) {
+                    this.player.anims.play("die", true);
+
+                    this.sound.stopAll();
+
+                    this.player.setTint(0xff0000);
+                    this.time.delayedCall(2000, () => {
+                        // Change to game over scene
+                        this.scene.start("GameOver", { score: this.score });
+                    }, [], this);
+                }
+            }
+
+            enemy.isAttacking = false;
+            clearInterval(attackInterval);
+
+        }, 475);
     }
-  }
+}
+
 
 
 
