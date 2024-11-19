@@ -28,7 +28,7 @@ export default class Scene extends Phaser.Scene {
       "assets/flying_eye.png",
       "assets/flying_eye.json"
     );
-    this.load.image("shit", "assets/shit.png");
+
 
     this.load.atlas("goblin", "assets/goblin.png", "assets/goblin.json");
 
