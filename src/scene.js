@@ -1,3 +1,5 @@
+import Phaser from 'phaser'
+
 export default class Scene extends Phaser.Scene {
   constructor() {
     super({ key: "Scene" });
@@ -739,7 +741,5 @@ class FlyingEye extends Enemy {
     this.anims.play("flying_eye_fly", true);
     this.setScale(0.60);
   }
-
-
 }
 

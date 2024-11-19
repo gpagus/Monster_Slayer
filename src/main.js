@@ -14,10 +14,6 @@ const config = {
         },
     },
     scene: [MainMenu, Scene, GameOver],
-    scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
-    },
 };
 
 new Phaser.Game(config);
